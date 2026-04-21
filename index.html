@@ -3,534 +3,452 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-    <title>Spelling Bee: Classroom Edition</title>
-    <link href="https://fonts.googleapis.com/css2?family=Fredoka+One&family=Quicksand:wght@500;700&display=swap" rel="stylesheet">
+    <title>Spelling Bee: Classroom Master</title>
     <style>
         :root {
             --bee-yellow: #FFD700;
             --bee-black: #333;
-            --team-blue: #3498db;
-            --team-green: #2ecc71;
-            --bg-white: #fdfdfd;
+            --squirrel-color: #D2691E;
+            --bear-color: #2F4F4F;
+            --white: #FFFFFF;
         }
 
-        * { box-sizing: border-box; -webkit-tap-highlight-color: transparent; }
+        * { box-sizing: border-box; font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; touch-action: manipulation; }
+        
+        body { margin: 0; padding: 0; background-color: var(--white); overflow: hidden; height: 100vh; display: flex; flex-direction: column; }
 
-        body {
-            margin: 0;
-            padding: 0;
-            font-family: 'Quicksand', sans-serif;
-            background-color: var(--bg-white);
-            color: var(--bee-black);
-            overflow: hidden;
-            height: 100vh;
-            display: flex;
-            flex-direction: column;
+        /* Utility Classes */
+        .hidden { display: none !important; }
+        .large-btn { padding: 15px 30px; font-size: 24px; cursor: pointer; border-radius: 15px; border: none; transition: transform 0.2s; font-weight: bold; }
+        .large-btn:active { transform: scale(0.95); }
+
+        /* Background Bee Decoration */
+        .bee-bg { position: fixed; width: 60px; height: 60px; z-index: -1; animation: fly 10s infinite linear; pointer-events: none; }
+        @keyframes fly {
+            0% { transform: translate(-100px, 100px) rotate(0deg); }
+            50% { transform: translate(110vw, 40vh) rotate(10deg); }
+            100% { transform: translate(-100px, 80vh) rotate(0deg); }
         }
 
-        /* --- UI Elements & Layout --- */
-        .screen {
-            display: none;
-            flex-direction: column;
-            align-items: center;
-            justify-content: center;
-            height: 100vh;
-            padding: 20px;
-            position: relative;
+        /* Menu System */
+        #main-menu { height: 100%; display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 20px; }
+        h1 { font-size: 60px; color: var(--bee-black); margin-bottom: 30px; text-shadow: 2px 2px var(--bee-yellow); }
+
+        /* Word List Editor */
+        #editor-container { padding: 20px; text-align: center; overflow-y: auto; height: 100%; }
+        #word-input-area { width: 80%; max-width: 600px; height: 200px; font-size: 20px; border: 3px solid var(--bee-yellow); border-radius: 10px; padding: 10px; }
+
+        /* Game Screens */
+        .game-screen { flex: 1; display: flex; flex-direction: column; }
+        .header { height: 60px; background: var(--bee-yellow); display: flex; align-items: center; justify-content: space-between; padding: 0 20px; font-weight: bold; }
+
+        /* Duel Mode Layout */
+        #duel-container { display: flex; height: 100%; width: 100%; }
+        .team-zone { flex: 1; display: flex; flex-direction: column; align-items: center; border: 4px solid; position: relative; padding: 10px; }
+        .squirrel-zone { border-color: var(--squirrel-color); background-color: #fff9f5; }
+        .bear-zone { border-color: var(--bear-color); background-color: #f5f9f9; }
+
+        /* Logic Fix - Drag and Drop */
+        .slots-container, .letters-pool { display: flex; flex-wrap: wrap; gap: 10px; justify-content: center; margin: 20px 0; min-height: 70px; width: 90%; }
+        .slot, .letter-tile { 
+            width: 60px; height: 60px; border: 2px dashed #ccc; border-radius: 8px; 
+            display: flex; align-items: center; justify-content: center; font-size: 32px; font-weight: bold;
+            background: white; cursor: grab;
         }
+        .letter-tile { border-style: solid; border-color: var(--bee-black); background: var(--bee-yellow); }
+        .slot.occupied { border-style: solid; border-color: var(--bee-black); background: #eee; }
 
-        .active { display: flex; }
+        /* On-Screen Keyboard */
+        .keyboard { display: grid; grid-template-columns: repeat(10, 1fr); gap: 5px; width: 95%; max-width: 500px; margin-top: auto; padding-bottom: 10px; }
+        .key { padding: 12px 5px; background: #444; color: white; border-radius: 5px; text-align: center; font-size: 18px; cursor: pointer; border: none; }
+        .key-wide { grid-column: span 1.5; }
 
-        h1 { font-family: 'Fredoka One', cursive; font-size: 3rem; margin-bottom: 20px; }
+        /* Icons & Stats */
+        .team-header { font-size: 28px; font-weight: bold; display: flex; align-items: center; gap: 10px; margin-bottom: 15px; }
+        .v-patch { background: white; color: black; padding: 2px 8px; clip-path: polygon(0 0, 100% 0, 50% 100%); font-size: 10px; }
 
-        .btn {
-            background: var(--bee-yellow);
-            border: 4px solid var(--bee-black);
-            border-radius: 15px;
-            padding: 15px 30px;
-            font-size: 1.5rem;
-            font-family: 'Fredoka One', cursive;
-            cursor: pointer;
-            margin: 10px;
-            transition: transform 0.2s;
-            box-shadow: 0 6px 0 var(--bee-black);
-        }
-
-        .btn:active { transform: translateY(4px); box-shadow: 0 2px 0 var(--bee-black); }
-        .btn-blue { background: var(--team-blue); color: white; border-color: #2980b9; }
-        .btn-green { background: var(--team-green); color: white; border-color: #27ae60; }
-
-        /* --- Animated Bee CSS --- */
-        .bee {
-            position: absolute;
-            width: 50px;
-            height: 40px;
-            background: var(--bee-yellow);
-            border-radius: 50%;
-            border: 3px solid var(--bee-black);
-            animation: float 3s ease-in-out infinite;
-            z-index: -1;
-        }
-        .bee::before, .bee::after {
-            content: '';
-            position: absolute;
-            background: rgba(255, 255, 255, 0.8);
-            width: 20px;
-            height: 15px;
-            border-radius: 50%;
-            top: -10px;
-            border: 1px solid #ccc;
-            animation: wings 0.1s linear infinite;
-        }
-        .bee::after { left: 15px; }
-        .stripe {
-            position: absolute;
-            width: 6px;
-            height: 34px;
-            background: var(--bee-black);
-            left: 18px;
-            top: 0;
-            border-radius: 2px;
-        }
-
-        @keyframes float { 0%, 100% { transform: translate(0,0); } 50% { transform: translate(10px, -20px); } }
-        @keyframes wings { 0% { transform: scaleY(1); } 50% { transform: scaleY(0.1); } 100% { transform: scaleY(1); } }
-
-        /* --- Game Play Elements --- */
-        .word-display {
-            display: flex;
-            gap: 10px;
-            margin: 30px;
-            flex-wrap: wrap;
-            justify-content: center;
-        }
-
-        .letter-box {
-            width: 60px;
-            height: 60px;
-            border: 3px solid var(--bee-black);
-            border-radius: 10px;
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            font-size: 2rem;
-            font-weight: bold;
-            background: white;
-            text-transform: uppercase;
-        }
-
-        .tile {
-            cursor: pointer;
-            background: var(--bee-yellow);
-            box-shadow: 0 4px 0 #b8860b;
-        }
-
-        /* --- Split Screen Duel --- */
-        .duel-container {
-            display: flex;
-            width: 100%;
-            height: 100%;
-        }
-
-        .side {
-            flex: 1;
-            display: flex;
-            flex-direction: column;
-            align-items: center;
-            padding: 10px;
-            position: relative;
-        }
-
-        .side-blue { border-right: 5px dashed var(--bee-black); }
-
-        .keyboard {
-            display: grid;
-            grid-template-columns: repeat(10, 1fr);
-            gap: 5px;
-            max-width: 600px;
-            margin-top: auto;
-            padding: 10px;
-        }
-
-        .key {
-            padding: 10px;
-            background: #eee;
-            border: 2px solid #ccc;
-            border-radius: 5px;
-            text-align: center;
-            cursor: pointer;
-            font-weight: bold;
-            font-size: 1.2rem;
-        }
-
-        .score-box {
-            position: absolute;
-            top: 20px;
-            background: var(--bee-black);
-            color: white;
-            padding: 10px 20px;
-            border-radius: 20px;
-            font-family: 'Fredoka One';
-            font-size: 1.5rem;
-            z-index: 10;
-        }
-
-        /* --- Editor & Modal --- */
-        textarea {
-            width: 80%;
-            height: 200px;
-            padding: 15px;
-            border-radius: 15px;
-            border: 3px solid var(--bee-black);
-            font-size: 1.1rem;
-            font-family: 'Quicksand';
-        }
-
-        .top-nav {
-            position: absolute;
-            top: 10px;
-            left: 10px;
-            display: flex;
-            gap: 10px;
-            z-index: 100;
-        }
-
-        .shake { animation: shake 0.5s; }
-        @keyframes shake {
-            0%, 100% { transform: translateX(0); }
-            25% { transform: translateX(-10px); }
-            75% { transform: translateX(10px); }
-        }
-
-        .sparkle { color: gold; animation: pop 0.3s; }
-        @keyframes pop { transform: scale(1.2); }
-
-        .student-picker {
-            background: #eee;
-            padding: 10px;
-            border-radius: 10px;
-            margin-bottom: 10px;
-            display: flex;
-            gap: 5px;
-            align-items: center;
+        /* Code History */
+        #history-list { list-style: none; padding: 0; width: 300px; }
+        .history-item { 
+            background: #eee; margin: 5px; padding: 15px; border-radius: 10px; 
+            cursor: pointer; display: flex; justify-content: space-between; align-items: center;
         }
     </style>
 </head>
 <body>
 
-    <div id="menu" class="screen active">
-        <div class="bee" style="top: 10%; left: 10%;"><div class="stripe"></div></div>
-        <div class="bee" style="top: 20%; right: 15%;"><div class="stripe"></div></div>
-        <h1>Spelling Bee</h1>
-        <p>Classroom Edition</p>
-        <button class="btn" onclick="openScreen('practice-mode-select')">Solo Practice</button>
-        <button class="btn btn-blue" onclick="openScreen('duel-mode-select')">Classroom Duel</button>
-        <button class="btn btn-green" onclick="openScreen('editor')">Edit Words</button>
-        <button class="btn" onclick="promptCode()">Load Game Code</button>
-    </div>
+    <div class="bee-bg">🐝</div>
 
-    <div id="practice-mode-select" class="screen">
-        <button class="btn top-nav" onclick="openScreen('menu')">Back</button>
-        <h2>Select Solo Mode</h2>
-        <button class="btn" onclick="startGame('practice', 'unscramble')">Unscramble</button>
-        <button class="btn" onclick="startGame('practice', 'spell')">Spell It</button>
-    </div>
-
-    <div id="duel-mode-select" class="screen">
-        <button class="btn top-nav" onclick="openScreen('menu')">Back</button>
-        <h2>Select Duel Mode</h2>
-        <button class="btn btn-blue" onclick="startGame('duel', 'unscramble')">Unscramble</button>
-        <button class="btn btn-green" onclick="startGame('duel', 'spell')">Spell It</button>
-    </div>
-
-    <div id="practice-game" class="screen">
-        <div class="top-nav">
-            <button class="btn" onclick="openScreen('menu')">Menu</button>
-            <button class="btn" onclick="nextWord()">Skip</button>
-        </div>
-        <div id="speaker-btn" class="btn" style="border-radius: 50%; width: 80px; height: 80px; display: flex; justify-content: center; align-items: center; font-size: 2rem;" onclick="speakCurrentWord()">🔊</div>
-        <div id="word-area" class="word-display"></div>
-        <div id="letters-area" class="word-display"></div>
-        <div id="solo-kb" class="keyboard"></div>
-    </div>
-
-    <div id="duel-game" class="screen" style="padding: 0;">
-        <div class="score-box" id="duel-score">Blue: 0 | Green: 0</div>
+    <div id="main-menu">
+        <h1>🐝 Spelling Bee</h1>
+        <button class="large-btn" style="background: var(--bee-yellow)" onclick="showScreen('mode-selection'); gameMode='solo'">Practice (Solo)</button>
+        <button class="large-btn" style="background: var(--bee-yellow)" onclick="showScreen('mode-selection'); gameMode='duel'">Duel (Team)</button>
+        <button class="large-btn" style="background: #add8e6" onclick="showEditor()">Edit Words</button>
+        <button class="large-btn" style="background: #98fb98" onclick="showScreen('game-code-screen')">Enter Game Code</button>
+        <button class="large-btn" style="background: #dda0dd" onclick="showHistory()">Code History</button>
         
-        <div class="duel-container">
-            <div class="side side-blue">
-                <div class="student-picker">
-                    Next: <span id="picker-a">?</span>
-                    <button onclick="pickStudent('a')">🎲</button>
-                </div>
-                <div id="word-a" class="word-display"></div>
-                <div id="letters-a" class="word-display"></div>
-                <div id="kb-a" class="keyboard"></div>
-                <button class="btn btn-blue" onclick="speakCurrentWord()">🔊 Listen</button>
-            </div>
-
-            <div class="side side-green">
-                <div class="student-picker">
-                    Next: <span id="picker-b">?</span>
-                    <button onclick="pickStudent('b')">🎲</button>
-                </div>
-                <div id="word-b" class="word-display"></div>
-                <div id="letters-b" class="word-display"></div>
-                <div id="kb-b" class="keyboard"></div>
-                <button class="btn btn-green" onclick="speakCurrentWord()">🔊 Listen</button>
-            </div>
-        </div>
-
-        <div class="top-nav">
-            <button class="btn" onclick="openScreen('menu')">Exit</button>
-            <button class="btn" onclick="resetDuel()">Reset Score</button>
+        <div style="margin-top:20px; border: 2px solid #ccc; padding: 10px; border-radius: 10px;">
+            <strong>Student Picker:</strong>
+            <input type="number" id="class-size" placeholder="Size" style="width:60px; font-size:20px">
+            <button class="large-btn" style="padding: 5px 15px; font-size: 18px" onclick="pickStudent()">Pick!</button>
+            <span id="picked-student" style="font-size: 24px; margin-left:10px; font-weight:bold; color:red"></span>
         </div>
     </div>
 
-    <div id="editor" class="screen">
-        <button class="btn top-nav" onclick="openScreen('menu')">Back</button>
-        <h2>Word List Editor</h2>
-        <p>Enter words separated by commas (max 50):</p>
-        <textarea id="word-input"></textarea>
-        <button class="btn btn-green" onclick="saveWords()">Save & Generate Code</button>
-        <div id="save-code-display" style="margin-top: 20px; font-weight: bold; font-size: 1.5rem;"></div>
+    <div id="mode-selection" class="hidden">
+        <div class="header"><button onclick="showScreen('main-menu')">Back</button> <span>Select Style</span></div>
+        <div style="display:flex; flex-direction:column; align-items:center; justify-content:center; height:80%; gap:20px">
+            <button class="large-btn" onclick="startGame('unscramble')">🧩 Unscramble (Logic Fix)</button>
+            <button class="large-btn" onclick="startGame('spellit')">⌨️ Spell It (Typing)</button>
+        </div>
+    </div>
+
+    <div id="editor-container" class="hidden">
+        <h2>List Editor</h2>
+        <textarea id="word-input-area" placeholder="Enter words separated by commas or enters..."></textarea>
+        <br><br>
+        <button class="large-btn" style="background: #98fb98" onclick="saveWordList()">Save & Generate Code</button>
+        <button class="large-btn" onclick="showScreen('main-menu')">Cancel</button>
+    </div>
+
+    <div id="game-code-screen" class="hidden" style="text-align:center; padding-top:100px">
+        <h2>Enter 6-Digit Code</h2>
+        <input type="text" id="code-input" maxlength="6" style="font-size:40px; text-align:center; width:200px"><br><br>
+        <button class="large-btn" onclick="loadByCode()">Load List</button>
+        <button class="large-btn" onclick="showScreen('main-menu')">Back</button>
+    </div>
+
+    <div id="history-screen" class="hidden" style="text-align:center; padding-top:50px">
+        <h2>Recent Game Codes</h2>
+        <div style="display:flex; flex-direction:column; align-items:center">
+            <div id="history-list"></div>
+        </div>
+        <br>
+        <button class="large-btn" onclick="showScreen('main-menu')">Back</button>
+    </div>
+
+    <div id="game-play" class="hidden game-screen">
+        <div class="header">
+            <button onclick="showScreen('main-menu')">Back to Menu</button>
+            <span id="game-title-display">Spelling Bee</span>
+            <span id="current-word-index">Word: 0/0</span>
+        </div>
+        
+        <div id="duel-container">
+            <div id="team-left" class="team-zone squirrel-zone">
+                <div class="team-header">🐿️ Mimi Squirrel <span id="score-left">0</span></div>
+                <button class="large-btn" style="background:var(--bee-yellow)" onclick="speakWord()">🔊 Listen</button>
+                <div id="play-area-left" class="play-content"></div>
+                <div id="kb-left" class="keyboard"></div>
+            </div>
+
+            <div id="team-right" class="team-zone bear-zone">
+                <div class="team-header">🐻 Hero Bear <span class="v-patch">V</span> <span id="score-right">0</span></div>
+                <button class="large-btn" style="background:var(--bee-yellow)" onclick="speakWord()">🔊 Listen</button>
+                <div id="play-area-right" class="play-content"></div>
+                <div id="kb-right" class="keyboard"></div>
+            </div>
+        </div>
     </div>
 
     <script>
-        // --- Core Data ---
-        let words = ["APPLE", "BANANA", "SCIENCE", "TEACHER", "STUDENT", "SCHOOL", "HONEY", "FLOWER", "BUMBLE", "GARDEN"];
-        let currentWordIndex = 0;
-        let currentGameMode = ''; // 'unscramble' or 'spell'
-        let currentType = ''; // 'practice' or 'duel'
-        let scores = { a: 0, b: 0 };
-        let userInput = { a: "", b: "", solo: "" };
+        // --- DATA & STATE ---
+        let currentWords = ["Alphabet", "Beehive", "Challenge", "Knowledge", "Classroom", "Student", "Teacher", "English", "School", "Learning"];
+        let gameMode = 'solo'; // 'solo' or 'duel'
+        let playStyle = 'spellit'; // 'unscramble' or 'spellit'
+        let currentIndex = 0;
+        let scores = { left: 0, right: 0 };
+        let draggedElement = null;
 
-        // --- Init ---
-        window.onload = () => {
-            const saved = localStorage.getItem('bee_words');
-            if (saved) words = JSON.parse(saved);
-            document.getElementById('word-input').value = words.join(', ');
-        };
+        const synth = window.speechSynthesis;
+        const soundCorrect = new Audio('https://actions.google.com/sounds/v1/cartoon/clime.ogg');
+        const soundWrong = new Audio('https://actions.google.com/sounds/v1/cartoon/buzz.ogg');
 
-        // --- Navigation ---
-        function openScreen(id) {
-            document.querySelectorAll('.screen').forEach(s => s.classList.remove('active'));
-            document.getElementById(id).classList.add('active');
-        }
-
-        // --- Game Logic ---
-        function startGame(type, mode) {
-            currentType = type;
-            currentGameMode = mode;
-            currentWordIndex = Math.floor(Math.random() * words.length);
-            userInput = { a: "", b: "", solo: "" };
-            
-            if (type === 'practice') {
-                openScreen('practice-game');
-                setupPractice();
-            } else {
-                openScreen('duel-game');
-                setupDuel();
-            }
-        }
-
-        function setupPractice() {
-            const word = words[currentWordIndex].toUpperCase();
-            const wordArea = document.getElementById('word-area');
-            const lettersArea = document.getElementById('letters-area');
-            const kbArea = document.getElementById('solo-kb');
-            
-            wordArea.innerHTML = '';
-            lettersArea.innerHTML = '';
-            kbArea.innerHTML = '';
-            userInput.solo = "";
-
-            if (currentGameMode === 'spell') {
-                for (let i = 0; i < word.length; i++) {
-                    wordArea.innerHTML += `<div class="letter-box" id="solo-box-${i}"></div>`;
-                }
-                createKeyboard('solo-kb', (char) => handleInput('solo', char));
-                speakCurrentWord();
-            } else {
-                renderScramble('word-area', 'letters-area', 'solo');
-            }
-        }
-
-        function setupDuel() {
-            const word = words[currentWordIndex].toUpperCase();
-            userInput.a = ""; userInput.b = "";
-            
-            ['a', 'b'].forEach(side => {
-                const wordArea = document.getElementById(`word-${side}`);
-                const lettersArea = document.getElementById(`letters-${side}`);
-                const kbArea = document.getElementById(`kb-${side}`);
-                wordArea.innerHTML = ''; lettersArea.innerHTML = ''; kbArea.innerHTML = '';
-
-                if (currentGameMode === 'spell') {
-                    for (let i = 0; i < word.length; i++) {
-                        wordArea.innerHTML += `<div class="letter-box" id="${side}-box-${i}"></div>`;
-                    }
-                    createKeyboard(`kb-${side}`, (char) => handleInput(side, char));
-                } else {
-                    renderScramble(`word-${side}`, `letters-${side}`, side);
-                }
+        // --- NAVIGATION ---
+        function showScreen(screenId) {
+            document.querySelectorAll('body > div').forEach(div => {
+                if(!div.classList.contains('bee-bg')) div.classList.add('hidden');
             });
-            speakCurrentWord();
+            document.getElementById(screenId).classList.remove('hidden');
         }
 
-        function createKeyboard(id, callback) {
-            const layout = "QWERTYUIOPASDFGHJKLZXCVBNM".split('');
-            const container = document.getElementById(id);
-            layout.forEach(key => {
-                const k = document.createElement('div');
-                k.className = 'key';
-                k.innerText = key;
-                k.onclick = () => callback(key);
-                container.appendChild(k);
-            });
-            // Backspace
-            const bs = document.createElement('div');
-            bs.className = 'key';
-            bs.innerText = '⌫';
-            bs.onclick = () => callback('BACK');
-            container.appendChild(bs);
+        function showEditor() {
+            showScreen('editor-container');
+            document.getElementById('word-input-area').value = currentWords.join(', ');
         }
 
-        function handleInput(side, char) {
-            const target = words[currentWordIndex].toUpperCase();
+        // --- WORD LIST LOGIC ---
+        function saveWordList() {
+            const input = document.getElementById('word-input-area').value;
+            const newList = input.split(/[,\n]/).map(w => w.trim()).filter(w => w.length > 0).slice(0, 50);
+            if(newList.length === 0) return alert("Please enter some words!");
             
-            if (char === 'BACK') {
-                userInput[side] = userInput[side].slice(0, -1);
+            currentWords = newList;
+            const code = Math.floor(100000 + Math.random() * 900000).toString();
+            localStorage.setItem('list_' + code, JSON.stringify(currentWords));
+            addToHistory(code);
+            alert("Game Saved! Your code is: " + code);
+            showScreen('main-menu');
+        }
+
+        function loadByCode() {
+            const code = document.getElementById('code-input').value;
+            const saved = localStorage.getItem('list_' + code);
+            if(saved) {
+                currentWords = JSON.parse(saved);
+                addToHistory(code);
+                alert("List Loaded!");
+                showScreen('main-menu');
             } else {
-                userInput[side] += char;
-            }
-
-            // Update display
-            for (let i = 0; i < target.length; i++) {
-                const box = document.getElementById(`${side}-box-${i}`);
-                if (box) box.innerText = userInput[side][i] || "";
-            }
-
-            // Check Win
-            if (userInput[side] === target) {
-                celebrate(side);
-            } else if (userInput[side].length >= target.length) {
-                userInput[side] = ""; 
-                const area = document.getElementById(side === 'solo' ? 'word-area' : `word-${side}`);
-                area.classList.add('shake');
-                setTimeout(() => area.classList.remove('shake'), 500);
-                // Clear boxes
-                for (let i = 0; i < target.length; i++) {
-                    const box = document.getElementById(`${side}-box-${i}`);
-                    if (box) box.innerText = "";
-                }
+                alert("Code not found.");
             }
         }
 
-        function renderScramble(wordId, letterId, side) {
-            const word = words[currentWordIndex].toUpperCase();
-            const scrambled = word.split('').sort(() => Math.random() - 0.5);
-            const wordArea = document.getElementById(wordId);
-            const letterArea = document.getElementById(letterId);
+        function addToHistory(code) {
+            let history = JSON.parse(localStorage.getItem('bee_history') || '[]');
+            history = history.filter(c => c !== code);
+            history.unshift(code);
+            localStorage.setItem('bee_history', JSON.stringify(history.slice(0, 10)));
+        }
 
-            // Create target slots
-            for (let i = 0; i < word.length; i++) {
-                wordArea.innerHTML += `<div class="letter-box" id="${side}-target-${i}"></div>`;
-            }
-
-            // Create tiles
-            scrambled.forEach((char, idx) => {
-                const tile = document.createElement('div');
-                tile.className = 'letter-box tile';
-                tile.innerText = char;
-                tile.onclick = () => {
-                    const nextIndex = userInput[side].length;
-                    if (nextIndex < word.length) {
-                        userInput[side] += char;
-                        document.getElementById(`${side}-target-${nextIndex}`).innerText = char;
-                        tile.style.visibility = 'hidden';
-                        
-                        if (userInput[side].length === word.length) {
-                            if (userInput[side] === word) celebrate(side);
-                            else {
-                                userInput[side] = "";
-                                wordArea.classList.add('shake');
-                                setTimeout(() => {
-                                    wordArea.classList.remove('shake');
-                                    renderScramble(wordId, letterId, side); // Reset
-                                }, 500);
-                            }
-                        }
-                    }
-                };
-                letterArea.appendChild(tile);
+        function showHistory() {
+            const history = JSON.parse(localStorage.getItem('bee_history') || '[]');
+            const list = document.getElementById('history-list');
+            list.innerHTML = history.length ? '' : 'No history found.';
+            history.forEach(code => {
+                const div = document.createElement('div');
+                div.className = 'history-item';
+                div.innerHTML = `<span>Code: <strong>${code}</strong></span> <button onclick="quickLoad('${code}')">Load</button>`;
+                list.appendChild(div);
             });
+            showScreen('history-screen');
         }
 
-        function celebrate(side) {
-            if (side === 'a') scores.a++;
-            if (side === 'b') scores.b++;
-            
-            document.getElementById('duel-score').innerText = `Blue: ${scores.a} | Green: ${scores.b}`;
-            
-            const msg = side === 'solo' ? "Correct!" : (side === 'a' ? "Blue Wins Point!" : "Green Wins Point!");
-            alert(msg);
-            
-            currentWordIndex = Math.floor(Math.random() * words.length);
-            if (currentType === 'practice') setupPractice();
-            else setupDuel();
+        function quickLoad(code) {
+            document.getElementById('code-input').value = code;
+            loadByCode();
         }
 
-        // --- Helpers ---
-        function speakCurrentWord() {
-            const synth = window.speechSynthesis;
-            const utter = new SpeechSynthesisUtterance(words[currentWordIndex]);
-            const voices = synth.getVoices();
-            utter.voice = voices.find(v => v.lang.includes('en-US') && v.name.includes('Female')) || voices[0];
-            utter.rate = 0.9;
-            synth.speak(utter);
+        // --- GAMEPLAY ENGINE ---
+        function startGame(style) {
+            playStyle = style;
+            currentIndex = 0;
+            scores = { left: 0, right: 0 };
+            document.getElementById('score-left').innerText = "0";
+            document.getElementById('score-right').innerText = "0";
+            
+            if(gameMode === 'solo') {
+                document.getElementById('team-right').classList.add('hidden');
+            } else {
+                document.getElementById('team-right').classList.remove('hidden');
+            }
+            
+            showScreen('game-play');
+            loadWord();
         }
 
-        function pickStudent(side) {
-            const total = prompt("Total students in this team?", "10");
-            if (total) {
-                const rand = Math.floor(Math.random() * parseInt(total)) + 1;
-                document.getElementById(`picker-${side}`).innerText = "#" + rand;
+        function loadWord() {
+            if(currentIndex >= currentWords.length) {
+                alert(`Game Over! Final Scores - Squirrel: ${scores.left}, Bear: ${scores.right}`);
+                showScreen('main-menu');
+                return;
+            }
+
+            document.getElementById('current-word-index').innerText = `Word: ${currentIndex + 1}/${currentWords.length}`;
+            setupZone('left');
+            if(gameMode === 'duel') setupZone('right');
+            
+            speakWord();
+        }
+
+        function setupZone(side) {
+            const area = document.getElementById(`play-area-${side}`);
+            const kb = document.getElementById(`kb-${side}`);
+            const word = currentWords[currentIndex].toUpperCase();
+            area.innerHTML = '';
+            kb.innerHTML = '';
+
+            if(playStyle === 'spellit') {
+                // Input slots (static display)
+                const display = document.createElement('div');
+                display.style.fontSize = '40px';
+                display.style.letterSpacing = '10px';
+                display.style.borderBottom = '3px solid #333';
+                display.style.minWidth = '200px';
+                display.style.textAlign = 'center';
+                display.id = `display-${side}`;
+                display.innerText = '_'.repeat(word.length);
+                area.appendChild(display);
+                createKeyboard(side);
+                area.dataset.current = "";
+            } else {
+                // Unscramble / Logic Fix
+                const slots = document.createElement('div');
+                slots.className = 'slots-container';
+                const pool = document.createElement('div');
+                pool.className = 'letters-pool';
+
+                const chars = word.split('');
+                const shuffled = [...chars].sort(() => Math.random() - 0.5);
+
+                chars.forEach((_, i) => {
+                    const slot = document.createElement('div');
+                    slot.className = 'slot';
+                    slot.dataset.index = i;
+                    slot.ondrop = drop;
+                    slot.ondragover = allowDrop;
+                    slot.ontouchend = touchEnd;
+                    slots.appendChild(slot);
+                });
+
+                shuffled.forEach((char, i) => {
+                    const tile = document.createElement('div');
+                    tile.className = 'letter-tile';
+                    tile.draggable = true;
+                    tile.innerText = char;
+                    tile.id = `tile-${side}-${i}`;
+                    tile.ondragstart = drag;
+                    tile.ontouchstart = touchStart;
+                    tile.ontouchmove = touchMove;
+                    pool.appendChild(tile);
+                });
+
+                area.appendChild(slots);
+                area.appendChild(pool);
             }
         }
 
-        function saveWords() {
-            const input = document.getElementById('word-input').value;
-            words = input.split(',').map(w => w.trim().toUpperCase()).filter(w => w.length > 0);
-            localStorage.setItem('bee_words', JSON.stringify(words));
-            const code = Math.random().toString(36).substring(2, 8).toUpperCase();
-            localStorage.setItem(`game_${code}`, JSON.stringify(words));
-            document.getElementById('save-code-display').innerText = "Saved! Use Code: " + code;
+        function createKeyboard(side) {
+            const keys = "QWERTYUIOPASDFGHJKLZXCVBNM".split('');
+            const container = document.getElementById(`kb-${side}`);
+            keys.forEach(k => {
+                const btn = document.createElement('button');
+                btn.className = 'key';
+                btn.innerText = k;
+                btn.onclick = () => handleKey(side, k);
+                container.appendChild(btn);
+            });
+            const back = document.createElement('button');
+            back.className = 'key key-wide';
+            back.innerText = 'Del';
+            back.style.background = '#d9534f';
+            back.onclick = () => handleKey(side, 'BACK');
+            container.appendChild(back);
         }
 
-        function promptCode() {
-            const code = prompt("Enter 6-digit Game Code:");
-            if (code) {
-                const data = localStorage.getItem(`game_${code.toUpperCase()}`);
-                if (data) {
-                    words = JSON.parse(data);
-                    alert("List Loaded Successfully!");
-                } else {
-                    alert("Invalid Code.");
-                }
+        function handleKey(side, key) {
+            const target = currentWords[currentIndex].toUpperCase();
+            const area = document.getElementById(`play-area-${side}`);
+            let current = area.dataset.current;
+
+            if(key === 'BACK') {
+                current = current.slice(0, -1);
+            } else if(current.length < target.length) {
+                current += key;
+            }
+
+            area.dataset.current = current;
+            const display = document.getElementById(`display-${side}`);
+            display.innerText = current + '_'.repeat(Math.max(0, target.length - current.length));
+
+            if(current === target) {
+                markCorrect(side);
             }
         }
 
-        function nextWord() {
-            currentWordIndex = (currentWordIndex + 1) % words.length;
-            setupPractice();
+        // --- DRAG AND DROP (Logic Fix) ---
+        function drag(ev) {
+            ev.dataTransfer.setData("text", ev.target.id);
+            draggedElement = ev.target;
         }
 
-        function resetDuel() {
-            scores = { a: 0, b: 0 };
-            document.getElementById('duel-score').innerText = `Blue: 0 | Green: 0`;
+        function allowDrop(ev) { ev.preventDefault(); }
+
+        function drop(ev) {
+            ev.preventDefault();
+            const data = ev.dataTransfer.getData("text");
+            const tile = document.getElementById(data);
+            handlePlacement(ev.target, tile);
         }
 
+        // Touch Support for Smartboards
+        let touchTarget = null;
+        function touchStart(e) {
+            draggedElement = e.target;
+            e.target.style.opacity = "0.5";
+        }
+        function touchMove(e) {
+            e.preventDefault();
+            const touch = e.touches[0];
+            const element = document.elementFromPoint(touch.clientX, touch.clientY);
+            touchTarget = element;
+        }
+        function touchEnd(e) {
+            draggedElement.style.opacity = "1";
+            if(touchTarget && (touchTarget.classList.contains('slot') || touchTarget.classList.contains('letters-pool'))) {
+                handlePlacement(touchTarget, draggedElement);
+            }
+        }
+
+        function handlePlacement(target, tile) {
+            const side = tile.id.includes('left') ? 'left' : 'right';
+            const zone = document.getElementById(`team-${side}`);
+            
+            // If target is an occupied slot, swap or return
+            if(target.classList.contains('letter-tile')) {
+                const parent = target.parentNode;
+                parent.appendChild(tile);
+                // Return original to pool
+                zone.querySelector('.letters-pool').appendChild(target);
+            } else {
+                target.appendChild(tile);
+            }
+
+            checkUnscramble(side);
+        }
+
+        function checkUnscramble(side) {
+            const zone = document.getElementById(`team-${side}`);
+            const slots = zone.querySelectorAll('.slot');
+            let built = "";
+            slots.forEach(s => {
+                if(s.firstChild) built += s.firstChild.innerText;
+            });
+
+            if(built === currentWords[currentIndex].toUpperCase()) {
+                markCorrect(side);
+            }
+        }
+
+        // --- FEEDBACK & AUDIO ---
+        function markCorrect(side) {
+            soundCorrect.play();
+            scores[side] += 10;
+            document.getElementById(`score-${side}`).innerText = scores[side];
+            
+            // Brief pause before next word
+            setTimeout(() => {
+                currentIndex++;
+                loadWord();
+            }, 1000);
+        }
+
+        function speakWord() {
+            const utterance = new SpeechSynthesisUtterance(currentWords[currentIndex]);
+            utterance.lang = 'en-US';
+            utterance.rate = 0.8;
+            synth.speak(utterance);
+        }
+
+        function pickStudent() {
+            const max = document.getElementById('class-size').value;
+            if(!max) return;
+            const num = Math.floor(Math.random() * max) + 1;
+            document.getElementById('picked-student').innerText = "#" + num;
+        }
+
+        // Initialize with default view
+        showScreen('main-menu');
     </script>
 </body>
 </html>
