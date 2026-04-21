@@ -14,7 +14,8 @@
         }
 
         body {
-            font-family: "Comic Sans MS", "Comic Sans",
+            /* Updated font family to Comic Sans MS and added fallbacks */
+            font-family: "Comic Sans MS", "Comic Sans", "Chalkboard SE";
             background-color: var(--soft-white);
             color: var(--bee-black);
             margin: 0;
@@ -89,11 +90,14 @@
             border: 3px solid var(--bee-black); border-radius: 10px;
             display: flex; align-items: center; justify-content: center;
             font-weight: bold; font-size: 1.3rem; cursor: pointer; user-select: none;
+            font-family: inherit;
         }
 
         .duel-container { display: flex; width: 100vw; height: 80vh; }
         .team-side { flex: 1; display: flex; flex-direction: column; align-items: center; border: 1px solid #ddd; padding: 10px; overflow-y: auto; }
         .back-btn { position: absolute; top: 10px; left: 10px; z-index: 100; }
+        
+        input, textarea { font-family: inherit; font-size: 1.1rem; }
     </style>
 </head>
 <body>
@@ -226,7 +230,6 @@
             targetDiv.className = "target-slots";
             targetDiv.id = side + "-target";
 
-            // Create horizontal slots
             for(let char of word) {
                 const slot = document.createElement('div');
                 if(char === " ") {
@@ -242,14 +245,12 @@
             const poolDiv = document.createElement('div');
             poolDiv.className = "letter-pool";
             
-            // Letters only pool
             const letters = word.replace(/\s/g, '').split('').sort(() => Math.random() - 0.5);
             letters.forEach(l => {
                 const tile = document.createElement('div');
                 tile.className = "tile";
                 tile.innerText = l;
                 tile.onclick = () => {
-                    // Find first empty non-space slot
                     const emptySlots = targetDiv.querySelectorAll('.slot:not(.space-slot)');
                     for(let slot of emptySlots) {
                         if(!slot.innerText) {
@@ -265,7 +266,6 @@
                 poolDiv.appendChild(tile);
             });
 
-            // Reset button for the round
             const resetBtn = document.createElement('button');
             resetBtn.className = "btn btn-small";
             resetBtn.innerText = "RESET TILES";
@@ -280,7 +280,10 @@
         function checkUnscrambleWin(side, word) {
             const slots = document.getElementById(side + "-target").querySelectorAll('.slot');
             let attempt = "";
-            slots.forEach(s => attempt += s.innerText || "");
+            slots.forEach(s => {
+                if(s.classList.contains('space-slot')) attempt += " ";
+                else attempt += s.innerText || "";
+            });
             
             if(attempt === word) {
                 wordIndex++;
