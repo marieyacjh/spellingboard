@@ -5,12 +5,13 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
     <title>Spelling Bee: Classroom Master</title>
     <style>
-        /* 1. VISUAL DESIGN & THEME */
+        /* VISUAL DESIGN & THEME */
         :root {
             --honey-yellow: #ffecb3;
             --bee-yellow: #ffcc00;
             --soft-white: #ffffff;
             --text-dark: #333333;
+            --border-color: #b89500;
         }
 
         body {
@@ -34,47 +35,65 @@
 
         .active { display: flex; }
 
-        h1 { font-size: 3rem; color: var(--text-dark); margin-bottom: 10px; }
+        h1 { font-size: 3.5rem; margin-bottom: 5px; text-transform: uppercase; }
 
         /* BUTTONS */
         .btn {
             background-color: var(--bee-yellow);
-            border: 3px solid #b89500;
-            border-radius: 20px;
-            padding: 15px 30px;
+            border: 3px solid var(--border-color);
+            border-radius: 25px;
+            padding: 15px 40px;
             font-size: 1.5rem;
-            font-family: "Comic Sans MS", cursive;
+            font-weight: bold;
+            font-family: inherit;
             cursor: pointer;
             margin: 10px;
-            transition: transform 0.1s ease;
-            box-shadow: 0 4px 0 #b89500;
+            box-shadow: 0 5px 0 var(--border-color);
+            transition: all 0.1s;
         }
 
         .btn:active {
             transform: translateY(4px);
-            box-shadow: none;
+            box-shadow: 0 1px 0 var(--border-color);
         }
 
-        .btn-small { padding: 8px 15px; font-size: 1rem; }
+        .btn-small { padding: 8px 15px; font-size: 1rem; border-radius: 15px; }
 
-        /* ANIMATED BEE */
-        .bee-container { position: relative; width: 100%; height: 100px; }
-        .bee {
-            font-size: 3rem;
-            position: absolute;
-            animation: fly 4s infinite ease-in-out;
+        /* KEYBOARD - 3 ROW QWERTY */
+        .keyboard {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            width: 100%;
+            margin-top: 15px;
         }
-        @keyframes fly {
-            0% { left: 10%; transform: translateY(0) rotate(0); }
-            50% { left: 80%; transform: translateY(-20px) rotate(10deg); }
-            100% { left: 10%; transform: translateY(0) rotate(0); }
+        .kb-row {
+            display: flex;
+            justify-content: center;
+            margin-bottom: 5px;
+            width: 100%;
+        }
+        .key {
+            width: 45px;
+            height: 55px;
+            margin: 3px;
+            background: var(--honey-yellow);
+            border: 2px solid var(--bee-yellow);
+            border-radius: 10px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-weight: bold;
+            font-size: 1.2rem;
+            cursor: pointer;
+            user-select: none;
         }
 
-        /* DUEL SPLIT SCREEN */
+        /* DUEL LAYOUT */
         .duel-container {
             display: flex;
-            width: 100%;
-            height: 90vh;
+            width: 100vw;
+            height: 85vh;
         }
         .team-side {
             flex: 1;
@@ -83,169 +102,146 @@
             align-items: center;
             border: 4px dashed var(--bee-yellow);
             padding: 10px;
-            position: relative;
-        }
-        .team-side:first-child { border-right: 2px solid #ccc; }
-
-        /* KEYBOARD */
-        .keyboard {
-            display: flex;
-            flex-wrap: wrap;
-            justify-content: center;
-            max-width: 400px;
-            margin-top: 10px;
-        }
-        .key {
-            width: 35px;
-            height: 45px;
-            margin: 3px;
-            background: var(--honey-yellow);
-            border: 2px solid var(--bee-yellow);
-            border-radius: 8px;
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            font-weight: bold;
-            cursor: pointer;
-            user-select: none;
+            background: #fffdf5;
         }
 
-        /* DRAG AND DROP */
+        /* TILES */
         .tiles-container, .target-container {
             display: flex;
             flex-wrap: wrap;
             gap: 10px;
-            min-height: 60px;
-            margin: 15px 0;
+            min-height: 65px;
+            margin: 10px 0;
             padding: 10px;
-            background: #f9f9f9;
-            border-radius: 10px;
+            background: #ffffff;
+            border: 2px solid #eee;
+            border-radius: 15px;
             width: 90%;
             justify-content: center;
         }
         .letter-tile {
-            width: 50px;
+            min-width: 50px;
             height: 50px;
             background: var(--bee-yellow);
-            border-radius: 10px;
+            border-radius: 12px;
             display: flex;
             align-items: center;
             justify-content: center;
-            font-size: 1.5rem;
+            font-size: 1.6rem;
             font-weight: bold;
-            cursor: grab;
-            box-shadow: 2px 2px 5px rgba(0,0,0,0.1);
+            cursor: pointer;
+            padding: 0 5px;
         }
 
-        /* UTILS */
-        .modal {
-            position: fixed;
-            top: 50%; left: 50%;
-            transform: translate(-50%, -50%);
-            background: white;
-            border: 5px solid var(--bee-yellow);
-            padding: 20px;
-            z-index: 100;
-            border-radius: 20px;
+        /* STUDENT PICKER */
+        .picker-box {
+            background: var(--honey-yellow);
+            padding: 10px;
+            border-radius: 15px;
+            margin-bottom: 10px;
             text-align: center;
-            display: none;
+            border: 2px solid var(--bee-yellow);
         }
-        .overlay {
-            position: fixed; top: 0; left: 0; width: 100%; height: 100%;
-            background: rgba(0,0,0,0.5); display: none; z-index: 99;
+
+        input, textarea { 
+            font-family: inherit; 
+            padding: 12px; 
+            border-radius: 10px; 
+            border: 3px solid var(--bee-yellow); 
+            font-size: 1.1rem;
         }
-        input { font-family: "Comic Sans MS", cursive; padding: 10px; border-radius: 10px; border: 2px solid var(--bee-yellow); margin: 5px; }
-        .score-display { font-size: 2rem; font-weight: bold; }
-        .back-btn { position: absolute; top: 10px; left: 10px; z-index: 50; }
+
+        .back-btn { position: absolute; top: 10px; left: 10px; z-index: 100; }
+        .display-area { font-size: 2.2rem; font-weight: bold; height: 50px; margin: 15px; border-bottom: 4px solid var(--bee-yellow); min-width: 200px; }
+        .score-val { font-size: 2.5rem; color: #d48806; }
     </style>
 </head>
 <body>
 
-    <button class="btn btn-small back-btn" onclick="showScreen('menu-screen')">🏠 Menu</button>
+    <button class="btn btn-small back-btn" onclick="showScreen('menu-screen')">BACK TO MENU</button>
 
     <div id="menu-screen" class="screen active">
-        <div class="bee-container"><div class="bee">🐝</div></div>
-        <h1>Spelling Bee</h1>
-        <p>Classroom Master</p>
-        <button class="btn" onclick="openModeSelect('practice')">🎯 Spelling Practice</button>
-        <button class="btn" onclick="openModeSelect('duel')">⚔️ Team Duel</button>
-        <button class="btn" onclick="showScreen('edit-screen')">📝 Edit Words</button>
-        <button class="btn" onclick="showScreen('code-screen')">🔑 Game Code</button>
-        <button class="btn" onclick="showHistory()">📜 Code History</button>
-        
-        <div style="margin-top:20px; background:#fff8e1; padding:15px; border-radius:15px;">
-            <h3>Random Student Picker</h3>
-            <input type="number" id="class-size" placeholder="Class Size (e.g. 30)" value="20">
-            <button class="btn btn-small" onclick="pickStudent()">Pick Number!</button>
-            <div id="picked-number" style="font-size:2rem; font-weight:bold;"></div>
-        </div>
+        <div style="height: 50px;"></div>
+        <h1>SPELLING BEE</h1>
+        <p>CLASSROOM MASTER</p>
+        <button class="btn" onclick="openModeSelect('practice')">SPELLING PRACTICE</button>
+        <button class="btn" onclick="openModeSelect('duel')">TEAM DUEL</button>
+        <button class="btn" onclick="showScreen('edit-screen')">EDIT WORDS</button>
+        <button class="btn" onclick="showScreen('code-screen')">GAME CODE</button>
+        <button class="btn" onclick="showHistory()">CODE HISTORY</button>
     </div>
 
     <div id="mode-screen" class="screen">
-        <h2 id="mode-title">Choose Your Style</h2>
-        <button class="btn" onclick="startGame('unscramble')">🧩 Unscramble</button>
-        <button class="btn" onclick="startGame('spell')">⌨️ Spell It</button>
+        <h2 id="mode-title">CHOOSE STYLE</h2>
+        
+        <div id="picker-container" style="display: flex; gap: 20px; margin-bottom: 20px;">
+            <div class="picker-box" id="picker-p">
+                <input type="number" class="class-size" placeholder="CLASS SIZE" value="20" style="width: 80px;">
+                <button class="btn btn-small" onclick="pickStudent('p')">PICK STUDENT</button>
+                <div class="picked-num" id="num-p" style="font-weight: bold; font-size: 1.5rem;">-</div>
+            </div>
+        </div>
+
+        <div style="display: flex;">
+            <button class="btn" onclick="startGame('unscramble')">UNSCRAMBLE</button>
+            <button class="btn" onclick="startGame('spell')">SPELL IT</button>
+        </div>
     </div>
 
     <div id="game-screen" class="screen">
-        <div id="game-content" style="width:100%; text-align:center;">
-            <div class="score-display">Score: <span id="p-score">0</span></div>
-            <button class="btn" onclick="speakWord()">🔊 Listen</button>
-            <div id="play-area"></div>
-            <button class="btn" onclick="checkAnswer()">Submit</button>
-        </div>
+        <div class="score-val">SCORE: <span id="p-score">0</span></div>
+        <button class="btn" onclick="speakWord()">LISTEN</button>
+        <div id="p-play" style="width: 100%; display: flex; flex-direction: column; align-items: center;"></div>
     </div>
 
-    <div id="duel-screen" class="screen">
+    <div id="duel-screen" class="screen" style="padding: 0;">
         <div class="duel-container">
-            <div id="left-side" class="team-side">
-                <input type="text" value="Team A" class="team-name" style="font-size:1.5rem; text-align:center;">
-                <div class="score-display">Score: <span id="l-score">0</span></div>
-                <div class="duel-play-area" id="l-play"></div>
+            <div class="team-side" id="l-side">
+                <input type="text" value="TEAM A" class="team-name" style="text-align:center; font-weight:bold; width: 80%;">
+                <div class="score-val"><span id="l-score">0</span></div>
+                <div id="l-play" style="width: 100%; display: flex; flex-direction: column; align-items: center;"></div>
             </div>
-            <div id="right-side" class="team-side">
-                <input type="text" value="Team B" class="team-name" style="font-size:1.5rem; text-align:center;">
-                <div class="score-display">Score: <span id="r-score">0</span></div>
-                <div class="duel-play-area" id="r-play"></div>
+            <div class="team-side" id="r-side">
+                <input type="text" value="TEAM B" class="team-name" style="text-align:center; font-weight:bold; width: 80%;">
+                <div class="score-val"><span id="r-score">0</span></div>
+                <div id="r-play" style="width: 100%; display: flex; flex-direction: column; align-items: center;"></div>
             </div>
         </div>
-        <button class="btn" onclick="speakWord()">🔊 Listen Word</button>
+        <button class="btn" style="position: absolute; bottom: 20px; left: 50%; transform: translateX(-50%);" onclick="speakWord()">LISTEN</button>
     </div>
 
     <div id="edit-screen" class="screen">
-        <h2>Word List Editor</h2>
-        <textarea id="word-input" rows="10" cols="30" placeholder="Enter words, one per line..."></textarea>
-        <br>
-        <button class="btn" onclick="saveWords()">Save & Get Code</button>
+        <h2>EDIT WORD LIST</h2>
+        <p>One word per line. Case sensitivity is preserved!</p>
+        <textarea id="word-input" rows="10" cols="40"></textarea>
+        <button class="btn" onclick="saveWords()">SAVE & GET CODE</button>
     </div>
 
     <div id="code-screen" class="screen">
-        <h2>Enter 6-Digit Code</h2>
-        <input type="text" id="game-code-input" maxlength="6" style="font-size:2rem; text-align:center;">
-        <button class="btn" onclick="loadByCode()">Load Words</button>
+        <h2>ENTER GAME CODE</h2>
+        <input type="text" id="game-code-input" maxlength="6" style="font-size: 2.5rem; text-align: center;">
+        <button class="btn" onclick="loadByCode()">LOAD WORDS</button>
     </div>
 
     <div id="history-screen" class="screen">
-        <h2>Last 10 Codes</h2>
+        <h2>CODE HISTORY</h2>
         <div id="history-list"></div>
     </div>
 
-    <div class="overlay" id="overlay"></div>
-    <div class="modal" id="modal">
-        <h2 id="modal-msg"></h2>
-        <button class="btn" onclick="closeModal()">Next</button>
-    </div>
-
     <script>
-        // --- DATA & INITIALIZATION ---
-        let currentWords = ["Alphabet", "Beehive", "Challenge", "Knowledge", "Classroom", "Student", "Teacher", "English", "Simple", "Learning"];
-        let gameMode = 'practice'; // practice or duel
-        let gameStyle = 'spell'; // unscramble or spell
-        let currentWordIndex = 0;
-        let pScore = 0, lScore = 0, rScore = 0;
-        let codes = JSON.parse(localStorage.getItem('bee_codes') || "[]");
+        // CONFIG & DATA
+        let currentWords = ["Alphabet", "Beehive", "Challenge", "Knowledge", "Classroom"];
+        let gameMode = 'practice'; 
+        let gameStyle = 'spell';
+        let wordIndex = 0;
+        let scores = { p: 0, l: 0, r: 0 };
+        const rows = [
+            "QWERTYUIOP".split(""),
+            "ASDFGHJKL".split(""),
+            "ZXCVBNM".split("")
+        ];
 
-        // --- NAVIGATION ---
+        // NAVIGATION
         function showScreen(id) {
             document.querySelectorAll('.screen').forEach(s => s.classList.remove('active'));
             document.getElementById(id).classList.add('active');
@@ -253,214 +249,227 @@
 
         function openModeSelect(mode) {
             gameMode = mode;
-            document.getElementById('mode-title').innerText = (mode === 'duel') ? "Team Duel Style" : "Practice Style";
+            const container = document.getElementById('picker-container');
+            container.innerHTML = '';
+            
+            if (mode === 'practice') {
+                container.innerHTML = createPickerHTML('p');
+            } else {
+                container.innerHTML = createPickerHTML('l') + createPickerHTML('r');
+            }
+            
+            document.getElementById('mode-title').innerText = mode.toUpperCase() + " MODE";
             showScreen('mode-screen');
         }
 
-        // --- SPEECH API ---
+        function createPickerHTML(id) {
+            return `
+            <div class="picker-box">
+                <div style="font-weight:bold; margin-bottom:5px;">${id === 'p' ? 'RANDOM' : 'TEAM ' + id.toUpperCase()}</div>
+                <input type="number" id="size-${id}" value="20" style="width: 60px;">
+                <button class="btn btn-small" onclick="pickStudent('${id}')">PICK</button>
+                <div id="num-${id}" style="font-size: 1.5rem; font-weight: bold;">-</div>
+            </div>`;
+        }
+
+        function pickStudent(id) {
+            const max = document.getElementById('size-' + id).value;
+            document.getElementById('num-' + id).innerText = Math.floor(Math.random() * max) + 1;
+        }
+
+        // WORD LOGIC
         function speakWord() {
-            const msg = new SpeechSynthesisUtterance(currentWords[currentWordIndex]);
-            msg.lang = 'en-US';
-            window.speechSynthesis.speak(msg);
+            const utterance = new SpeechSynthesisUtterance(currentWords[wordIndex]);
+            utterance.lang = 'en-US';
+            window.speechSynthesis.speak(utterance);
         }
 
-        function playSound(type) {
-            const ctx = new (window.AudioContext || window.webkitAudioContext)();
-            const osc = ctx.createOscillator();
-            const gain = ctx.createGain();
-            osc.connect(gain);
-            gain.connect(ctx.destination);
-            
-            if(type === 'correct') {
-                osc.frequency.setValueAtTime(523.25, ctx.currentTime); // C5
-                osc.frequency.exponentialRampToValueAtTime(880, ctx.currentTime + 0.3);
-            } else {
-                osc.frequency.setValueAtTime(150, ctx.currentTime);
-                osc.frequency.linearRampToValueAtTime(100, ctx.currentTime + 0.3);
-            }
-            
-            osc.start();
-            gain.gain.exponentialRampToValueAtTime(0.01, ctx.currentTime + 0.3);
-            osc.stop(ctx.currentTime + 0.3);
-        }
-
-        // --- GAME LOGIC ---
         function startGame(style) {
             gameStyle = style;
-            currentWordIndex = 0;
-            pScore = 0; lScore = 0; rScore = 0;
-            updateScores();
+            wordIndex = 0;
+            scores = { p: 0, l: 0, r: 0 };
+            updateScoreDisplay();
             
             if (gameMode === 'practice') {
                 showScreen('game-screen');
-                setupRound();
+                renderRound('p-play', 'p');
             } else {
                 showScreen('duel-screen');
-                setupDuelRound();
+                renderRound('l-play', 'l');
+                renderRound('r-play', 'r');
             }
         }
 
-        function setupRound() {
-            const area = document.getElementById('play-area');
-            area.innerHTML = '';
-            const word = currentWords[currentWordIndex].toUpperCase();
-
-            if (gameStyle === 'unscramble') {
-                renderUnscramble(area, word, 'p');
-            } else {
-                renderKeyboard(area, 'p');
-            }
-        }
-
-        function setupDuelRound() {
-            const lArea = document.getElementById('l-play');
-            const rArea = document.getElementById('r-play');
-            lArea.innerHTML = ''; rArea.innerHTML = '';
-            const word = currentWords[currentWordIndex].toUpperCase();
-
-            if (gameStyle === 'unscramble') {
-                renderUnscramble(lArea, word, 'l');
-                renderUnscramble(rArea, word, 'r');
-            } else {
-                renderKeyboard(lArea, 'l');
-                renderKeyboard(rArea, 'r');
-            }
-        }
-
-        // --- UI GENERATORS ---
-        function renderKeyboard(container, side) {
-            const display = document.createElement('div');
-            display.id = side + "-display";
-            display.style = "font-size:2.5rem; letter-spacing:5px; height:50px; margin:20px; border-bottom:3px solid var(--bee-yellow)";
-            container.appendChild(display);
-
-            const kb = document.createElement('div');
-            kb.className = "keyboard";
-            "QWERTYUIOPASDFGHJKLZXCVBNM".split('').forEach(key => {
-                const k = document.createElement('div');
-                k.className = "key";
-                k.innerText = key;
-                k.onclick = () => {
-                    display.innerText += key;
-                    checkDuelSpelling(side);
-                };
-                kb.appendChild(k);
-            });
-            const del = document.createElement('div');
-            del.className = "key"; del.innerText = "⌫";
-            del.style.width = "60px";
-            del.onclick = () => display.innerText = display.innerText.slice(0, -1);
-            kb.appendChild(del);
-            container.appendChild(kb);
-        }
-
-        function renderUnscramble(container, word, side) {
-            const target = document.createElement('div');
-            target.className = "target-container";
-            target.id = side + "-target";
-            
-            const tiles = document.createElement('div');
-            tiles.className = "tiles-container";
-            tiles.id = side + "-tiles";
-
-            // Shuffle letters
-            const shuffled = word.split('').sort(() => Math.random() - 0.5);
-            shuffled.forEach(l => {
-                const tile = document.createElement('div');
-                tile.className = "letter-tile";
-                tile.innerText = l;
-                tile.onclick = () => {
-                    if (tile.parentElement === tiles) target.appendChild(tile);
-                    else tiles.appendChild(tile);
-                    checkDuelSpelling(side);
-                };
-                tiles.appendChild(tile);
-            });
-
-            container.appendChild(target);
-            container.appendChild(tiles);
-        }
-
-        // --- WIN/LOGIC CHECKING ---
-        function checkDuelSpelling(side) {
-            let attempt = "";
-            const target = currentWords[currentWordIndex].toUpperCase();
+        function renderRound(containerId, side) {
+            const container = document.getElementById(containerId);
+            container.innerHTML = '';
+            const targetWord = currentWords[wordIndex];
 
             if (gameStyle === 'spell') {
-                attempt = document.getElementById(side + '-display').innerText;
+                const display = document.createElement('div');
+                display.id = side + "-display";
+                display.className = "display-area";
+                container.appendChild(display);
+                renderKeyboard(container, side, targetWord);
             } else {
-                attempt = Array.from(document.getElementById(side + '-target').children).map(c => c.innerText).join('');
+                renderUnscramble(container, side, targetWord);
+            }
+        }
+
+        function renderKeyboard(container, side, targetWord) {
+            const kbContainer = document.createElement('div');
+            kbContainer.className = "keyboard";
+
+            rows.forEach(rowLetters => {
+                const rowDiv = document.createElement('div');
+                rowDiv.className = "kb-row";
+                rowLetters.forEach(char => {
+                    const key = document.createElement('div');
+                    key.className = "key";
+                    // Match casing logic: If target word is lowercase, show lowercase keys
+                    const displayChar = isAllLower(targetWord) ? char.toLowerCase() : char;
+                    key.innerText = displayChar;
+                    key.onclick = () => handleKey(side, displayChar);
+                    rowDiv.appendChild(key);
+                });
+                kbContainer.appendChild(rowDiv);
+            });
+
+            // Add Backspace Row
+            const lastRow = document.createElement('div');
+            lastRow.className = "kb-row";
+            const del = document.createElement('div');
+            del.className = "key"; del.style.width = "100px"; del.innerText = "DELETE";
+            del.onclick = () => {
+                const d = document.getElementById(side + "-display");
+                d.innerText = d.innerText.slice(0, -1);
+            };
+            lastRow.appendChild(del);
+            kbContainer.appendChild(lastRow);
+            
+            container.appendChild(kbContainer);
+        }
+
+        function handleKey(side, char) {
+            const display = document.getElementById(side + "-display");
+            const target = currentWords[wordIndex];
+            
+            // Auto-case logic based on the user's word list input
+            let charToType = char;
+            const currentLen = display.innerText.length;
+            
+            // If the original word's character at this position is lowercase/uppercase, force it
+            if (target[currentLen]) {
+                const targetChar = target[currentLen];
+                if (targetChar === targetChar.toLowerCase() && targetChar !== targetChar.toUpperCase()) {
+                    charToType = char.toLowerCase();
+                } else {
+                    charToType = char.toUpperCase();
+                }
+            }
+
+            display.innerText += charToType;
+            checkWin(side);
+        }
+
+        function renderUnscramble(container, side, targetWord) {
+            const targetArea = document.createElement('div');
+            targetArea.className = "target-container";
+            targetArea.id = side + "-target";
+            
+            const poolArea = document.createElement('div');
+            poolArea.className = "tiles-container";
+            poolArea.id = side + "-pool";
+
+            // Create tiles based on the exact characters in the word
+            const chars = targetWord.split('').sort(() => Math.random() - 0.5);
+            chars.forEach(c => {
+                const tile = document.createElement('div');
+                tile.className = "letter-tile";
+                tile.innerText = c;
+                tile.onclick = () => {
+                    if (tile.parentElement === poolArea) targetArea.appendChild(tile);
+                    else poolArea.appendChild(tile);
+                    checkWin(side);
+                };
+                poolArea.appendChild(tile);
+            });
+
+            container.appendChild(targetArea);
+            container.appendChild(poolArea);
+        }
+
+        function checkWin(side) {
+            let attempt = "";
+            const target = currentWords[wordIndex];
+
+            if (gameStyle === 'spell') {
+                attempt = document.getElementById(side + "-display").innerText;
+            } else {
+                attempt = Array.from(document.getElementById(side + "-target").children).map(t => t.innerText).join("");
             }
 
             if (attempt === target) {
-                playSound('correct');
-                if (side === 'l') lScore++; else if (side === 'r') rScore++; else pScore++;
-                updateScores();
-                nextRound();
+                scores[side]++;
+                updateScoreDisplay();
+                wordIndex++;
+                if (wordIndex >= currentWords.length) {
+                    alert("ROUND FINISHED!");
+                    showScreen('menu-screen');
+                } else {
+                    if (gameMode === 'practice') renderRound('p-play', 'p');
+                    else { renderRound('l-play', 'l'); renderRound('r-play', 'r'); }
+                }
             }
         }
 
-        function checkAnswer() { // For Practice Submit button
-            checkDuelSpelling('p');
+        // HELPERS
+        function isAllLower(str) { return str === str.toLowerCase(); }
+        
+        function updateScoreDisplay() {
+            ['p','l','r'].forEach(s => {
+                const el = document.getElementById(s + '-score');
+                if (el) el.innerText = scores[s];
+            });
         }
 
-        function updateScores() {
-            if(document.getElementById('p-score')) document.getElementById('p-score').innerText = pScore;
-            if(document.getElementById('l-score')) document.getElementById('l-score').innerText = lScore;
-            if(document.getElementById('r-score')) document.getElementById('r-score').innerText = rScore;
-        }
-
-        function nextRound() {
-            currentWordIndex++;
-            if (currentWordIndex >= currentWords.length) {
-                showModal("🎉 Lesson Complete!");
-                currentWordIndex = 0;
-            } else {
-                gameMode === 'practice' ? setupRound() : setupDuelRound();
-            }
-        }
-
-        // --- DATA MANAGEMENT ---
         function saveWords() {
-            const val = document.getElementById('word-input').value;
-            const list = val.split('\n').map(w => w.trim()).filter(w => w !== "");
-            if (list.length === 0) return alert("Enter some words!");
+            const input = document.getElementById('word-input').value;
+            const list = input.split('\n').map(s => s.trim()).filter(s => s !== "");
+            if (list.length === 0) return;
             
             const code = Math.floor(100000 + Math.random() * 900000).toString();
-            const data = { code, words: list, date: new Date().toLocaleDateString() };
-            
-            codes.unshift(data);
-            if (codes.length > 10) codes.pop();
-            localStorage.setItem('bee_codes', JSON.stringify(codes));
+            currentWords = list;
             localStorage.setItem('words_' + code, JSON.stringify(list));
             
-            alert("Saved! Your Classroom Code is: " + code);
-            currentWords = list;
+            let history = JSON.parse(localStorage.getItem('bee_history') || "[]");
+            history.unshift({code, date: new Date().toLocaleDateString()});
+            localStorage.setItem('bee_history', JSON.stringify(history.slice(0, 10)));
+            
+            alert("SAVED! CODE: " + code);
             showScreen('menu-screen');
         }
 
         function loadByCode() {
             const code = document.getElementById('game-code-input').value;
-            const stored = localStorage.getItem('words_' + code);
-            if (stored) {
-                currentWords = JSON.parse(stored);
-                alert("Loaded " + currentWords.length + " words!");
+            const data = localStorage.getItem('words_' + code);
+            if (data) {
+                currentWords = JSON.parse(data);
+                alert("LOADED " + currentWords.length + " WORDS");
                 showScreen('menu-screen');
-            } else {
-                alert("Code not found.");
-            }
+            } else alert("CODE NOT FOUND");
         }
 
         function showHistory() {
             const list = document.getElementById('history-list');
             list.innerHTML = '';
-            codes.forEach(c => {
+            const history = JSON.parse(localStorage.getItem('bee_history') || "[]");
+            history.forEach(h => {
                 const b = document.createElement('button');
-                b.className = "btn btn-small";
-                b.innerText = `${c.code} (${c.date})`;
+                b.className = "btn";
+                b.innerText = h.code + " (" + h.date + ")";
                 b.onclick = () => {
-                    currentWords = c.words;
-                    alert("Loaded " + c.code);
+                    currentWords = JSON.parse(localStorage.getItem('words_' + h.code));
                     showScreen('menu-screen');
                 };
                 list.appendChild(b);
@@ -468,26 +477,6 @@
             showScreen('history-screen');
         }
 
-        // --- UTILS ---
-        function pickStudent() {
-            const max = document.getElementById('class-size').value;
-            const num = Math.floor(Math.random() * max) + 1;
-            document.getElementById('picked-number').innerText = "Student #" + num;
-        }
-
-        function showModal(msg) {
-            document.getElementById('modal-msg').innerText = msg;
-            document.getElementById('modal').style.display = 'block';
-            document.getElementById('overlay').style.display = 'block';
-        }
-
-        function closeModal() {
-            document.getElementById('modal').style.display = 'none';
-            document.getElementById('overlay').style.display = 'none';
-            showScreen('menu-screen');
-        }
-
-        // Initialize textarea with default words
         document.getElementById('word-input').value = currentWords.join('\n');
     </script>
 </body>
