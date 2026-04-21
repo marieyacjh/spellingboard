@@ -1,0 +1,438 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Spelling Hub: Duel Edition</title>
+    <style>
+        :root {
+            --primary-blue: #3498db;
+            --primary-green: #2ecc71;
+            --dark-gray: #2c3e50;
+            --light-gray: #ecf0f1;
+            --wrong-red: #e74c3c;
+            --bg-white: #ffffff;
+        }
+
+        * { box-sizing: border-box; font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; }
+
+        body {
+            margin: 0;
+            background-color: var(--bg-white);
+            color: var(--dark-gray);
+            overflow-x: hidden;
+            display: flex;
+            flex-direction: column;
+            height: 100vh;
+        }
+
+        /* Screens */
+        .screen { display: none; padding: 20px; height: 100%; flex-direction: column; align-items: center; }
+        .active-screen { display: flex; }
+
+        /* Typography */
+        h1 { font-size: 3rem; margin: 10px; color: var(--primary-blue); }
+        h2 { font-size: 1.5rem; margin-bottom: 20px; }
+
+        /* Buttons */
+        .btn {
+            padding: 15px 30px;
+            font-size: 1.2rem;
+            cursor: pointer;
+            border: none;
+            border-radius: 10px;
+            transition: transform 0.1s, opacity 0.2s;
+            margin: 5px;
+            font-weight: bold;
+            color: white;
+        }
+        .btn:active { transform: scale(0.95); }
+        .btn-blue { background-color: var(--primary-blue); }
+        .btn-green { background-color: var(--primary-green); }
+        .btn-gray { background-color: #7f8c8d; }
+        .btn-large { font-size: 1.8rem; padding: 20px 40px; }
+
+        /* Word Management Page */
+        #word-list-area { width: 100%; max-width: 600px; height: 300px; padding: 15px; font-size: 1.1rem; border: 2px solid var(--primary-blue); border-radius: 8px; margin-bottom: 10px; }
+        .code-display { font-size: 1.5rem; font-weight: bold; color: var(--primary-green); margin: 10px; }
+
+        /* Main Game Layout */
+        #game-header {
+            width: 100%;
+            display: flex;
+            justify-content: space-around;
+            align-items: center;
+            background: var(--light-gray);
+            padding: 10px;
+            border-bottom: 4px solid #ddd;
+        }
+
+        .score-box { font-size: 2.5rem; font-weight: bold; }
+        #student-selector { background: white; padding: 10px; border-radius: 8px; border: 2px dashed var(--primary-blue); }
+
+        #duel-container {
+            display: flex;
+            flex: 1;
+            width: 100%;
+        }
+
+        .team-side {
+            flex: 1;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            position: relative;
+            padding: 20px;
+            transition: background 0.3s;
+        }
+
+        #side-a { border-right: 4px solid #ddd; background-color: rgba(52, 152, 219, 0.05); }
+        #side-b { background-color: rgba(46, 204, 113, 0.05); }
+
+        /* Gameplay Elements */
+        .word-display {
+            display: flex;
+            gap: 10px;
+            margin: 20px 0;
+            min-height: 80px;
+            flex-wrap: wrap;
+            justify-content: center;
+        }
+
+        .letter-box {
+            width: 60px;
+            height: 70px;
+            border: 3px solid var(--dark-gray);
+            border-radius: 8px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 2rem;
+            font-weight: bold;
+            background: white;
+            text-transform: uppercase;
+        }
+
+        .scramble-container {
+            display: flex;
+            gap: 10px;
+            margin: 10px;
+            flex-wrap: wrap;
+            justify-content: center;
+        }
+
+        .scramble-letter {
+            padding: 15px;
+            background: white;
+            border: 2px solid var(--dark-gray);
+            border-radius: 5px;
+            cursor: pointer;
+            font-size: 1.5rem;
+            font-weight: bold;
+        }
+
+        /* Keyboard */
+        #keyboard {
+            width: 100%;
+            background: #34495e;
+            padding: 15px;
+            display: grid;
+            grid-template-columns: repeat(10, 1fr);
+            gap: 8px;
+            justify-items: center;
+        }
+
+        .key {
+            width: 100%;
+            max-width: 60px;
+            height: 50px;
+            background: white;
+            border: none;
+            border-radius: 5px;
+            font-size: 1.2rem;
+            font-weight: bold;
+            cursor: pointer;
+        }
+
+        .key:hover { background: #eee; }
+        .key-wide { grid-column: span 2; max-width: 120px; background: #95a5a6; }
+
+        /* Feedback Anims */
+        .correct-flash { animation: flash-green 0.5s; }
+        .wrong-flash { animation: flash-red 0.5s; }
+        @keyframes flash-green { 0% { background-color: var(--primary-green); } 100% { background-color: transparent; } }
+        @keyframes flash-red { 0% { background-color: var(--wrong-red); } 100% { background-color: transparent; } }
+
+        .hidden { display: none; }
+    </style>
+</head>
+<body>
+
+    <div id="menu-screen" class="screen active-screen">
+        <h1>🔤 Spelling Hub</h1>
+        <h2>Duel Edition</h2>
+        <button class="btn btn-blue btn-large" onclick="startGame()">Start Duel</button>
+        <button class="btn btn-green btn-large" onclick="showScreen('editor-screen')">Word Editor</button>
+        <div style="margin-top: 30px;">
+            <input type="text" id="load-code-input" placeholder="Enter 6-digit Code" style="padding: 10px; font-size: 1.2rem;">
+            <button class="btn btn-gray" onclick="loadByCode()">Load List</button>
+        </div>
+    </div>
+
+    <div id="editor-screen" class="screen">
+        <h2>Word List Editor</h2>
+        <p>Type one word per line (up to 50 words):</p>
+        <textarea id="word-list-area" placeholder="Apple&#10;Banana&#10;Orange..."></textarea>
+        <div class="code-display" id="generated-code-text"></div>
+        <div>
+            <button class="btn btn-green" onclick="saveWordList()">Save & Generate Code</button>
+            <button class="btn btn-gray" onclick="showScreen('menu-screen')">Back to Menu</button>
+        </div>
+    </div>
+
+    <div id="game-screen" class="screen" style="padding:0;">
+        <div id="game-header">
+            <button class="btn btn-gray" onclick="showScreen('menu-screen')">Exit</button>
+            <div id="student-selector">
+                Students: <input type="number" id="total-students" value="20" style="width: 50px;">
+                <button class="btn btn-blue" onclick="pickStudent()">Randomize</button>
+                <span id="picked-student" style="font-weight: bold; margin-left: 10px;"></span>
+            </div>
+            <div class="score-box">
+                <span style="color: var(--primary-blue)">A: <span id="score-a">0</span></span>
+                | 
+                <span style="color: var(--primary-green)">B: <span id="score-b">0</span></span>
+            </div>
+            <button class="btn btn-green" onclick="nextWord()">Next Word ➡</button>
+        </div>
+
+        <div id="duel-container">
+            <div id="side-a" class="team-side">
+                <h3 style="color: var(--primary-blue)">Team A</h3>
+                <button class="btn btn-blue" onclick="speakWord()">🔈 Listen</button>
+                <div id="display-a" class="word-display"></div>
+                <div id="scramble-a" class="scramble-container"></div>
+            </div>
+
+            <div id="side-b" class="team-side">
+                <h3 style="color: var(--primary-green)">Team B</h3>
+                <button class="btn btn-green" onclick="speakWord()">🔈 Listen</button>
+                <div id="display-b" class="word-display"></div>
+                <div id="scramble-b" class="scramble-container"></div>
+            </div>
+        </div>
+
+        <div id="keyboard">
+            </div>
+    </div>
+
+    <script>
+        // --- DATA & CONFIG ---
+        const DEFAULT_WORDS = ["Apple", "House", "School", "Computer", "Student", "Teacher", "English", "Yellow", "Garden", "Family"];
+        let currentWordList = [...DEFAULT_WORDS];
+        let currentWordIndex = 0;
+        let activeWord = "";
+        let userInputA = "";
+        let userInputB = "";
+        let scoreA = 0;
+        let scoreB = 0;
+        let gameMode = "BOXES"; // "BOXES" or "SCRAMBLE"
+
+        // --- NAVIGATION ---
+        function showScreen(screenId) {
+            document.querySelectorAll('.screen').forEach(s => s.classList.remove('active-screen'));
+            document.getElementById(screenId).classList.add('active-screen');
+        }
+
+        // --- WORD MANAGEMENT ---
+        function saveWordList() {
+            const text = document.getElementById('word-list-area').value.trim();
+            if (!text) return alert("Please enter some words!");
+            
+            const words = text.split('\n').map(w => w.trim()).filter(w => w.length > 0);
+            const code = Math.random().toString(36).substring(2, 8).toUpperCase();
+            
+            localStorage.setItem(code, JSON.stringify(words));
+            document.getElementById('generated-code-text').innerText = "List Saved! Code: " + code;
+            currentWordList = words;
+        }
+
+        function loadByCode() {
+            const code = document.getElementById('load-code-input').value.trim().toUpperCase();
+            const saved = localStorage.getItem(code);
+            if (saved) {
+                currentWordList = JSON.parse(saved);
+                alert("List loaded successfully!");
+                startGame();
+            } else {
+                alert("Code not found.");
+            }
+        }
+
+        // --- GAME LOGIC ---
+        function startGame() {
+            scoreA = 0;
+            scoreB = 0;
+            currentWordIndex = 0;
+            updateScoreUI();
+            showScreen('game-screen');
+            nextWord();
+            setupKeyboard();
+        }
+
+        function nextWord() {
+            if (currentWordIndex >= currentWordList.length) {
+                currentWordIndex = 0; // Loop list
+            }
+            activeWord = currentWordList[currentWordIndex].toUpperCase();
+            userInputA = "";
+            userInputB = "";
+            
+            // Randomly pick mode for this word
+            gameMode = Math.random() > 0.5 ? "BOXES" : "SCRAMBLE";
+            
+            renderWordDisplay();
+            currentWordIndex++;
+        }
+
+        function renderWordDisplay() {
+            const containerA = document.getElementById('display-a');
+            const containerB = document.getElementById('display-b');
+            const scrambleA = document.getElementById('scramble-a');
+            const scrambleB = document.getElementById('scramble-b');
+            
+            containerA.innerHTML = "";
+            containerB.innerHTML = "";
+            scrambleA.innerHTML = "";
+            scrambleB.innerHTML = "";
+
+            // Box Fill Mode
+            for (let i = 0; i < activeWord.length; i++) {
+                const boxA = document.createElement('div');
+                boxA.className = 'letter-box';
+                boxA.innerText = userInputA[i] || "";
+                containerA.appendChild(boxA);
+
+                const boxB = document.createElement('div');
+                boxB.className = 'letter-box';
+                boxB.innerText = userInputB[i] || "";
+                containerB.appendChild(boxB);
+            }
+
+            // Scramble Mode UI
+            if (gameMode === "SCRAMBLE") {
+                const shuffled = activeWord.split('').sort(() => Math.random() - 0.5);
+                shuffled.forEach(char => {
+                    const btn = document.createElement('div');
+                    btn.className = 'scramble-letter';
+                    btn.innerText = char;
+                    btn.onclick = () => handleInput(char);
+                    scrambleA.appendChild(btn.cloneNode(true)); // Simplified for this demo
+                    scrambleB.appendChild(btn);
+                });
+            }
+        }
+
+        function handleInput(char) {
+            // In this Duel Edition, the keyboard acts for both, but usually, 
+            // students take turns or use physical keyboards. 
+            // Let's assume common classroom logic: First to type correct wins.
+            
+            // Simple logic: We'll update Team A if they are active, or simulate dual typing
+            // For a single Smartboard, we let the teacher click or use keys.
+            
+            if (userInputA.length < activeWord.length) {
+                userInputA += char;
+                checkAnswer('A');
+            }
+            renderWordDisplay();
+        }
+
+        function checkAnswer(team) {
+            const input = team === 'A' ? userInputA : userInputB;
+            if (input === activeWord) {
+                playSound('correct');
+                flashScreen(team, 'correct-flash');
+                if (team === 'A') scoreA++; else scoreB++;
+                updateScoreUI();
+                setTimeout(nextWord, 1000);
+            } else if (input.length === activeWord.length) {
+                playSound('wrong');
+                flashScreen(team, 'wrong-flash');
+                if (team === 'A') userInputA = ""; else userInputB = "";
+                setTimeout(renderWordDisplay, 500);
+            }
+        }
+
+        // --- HELPERS ---
+        function setupKeyboard() {
+            const layout = "QWERTYUIOPASDFGHJKLZXCVBNM".split("");
+            const kb = document.getElementById('keyboard');
+            kb.innerHTML = "";
+            layout.forEach(key => {
+                const button = document.createElement('button');
+                button.className = 'key';
+                button.innerText = key;
+                button.onclick = () => handleInput(key);
+                kb.appendChild(button);
+            });
+            
+            const del = document.createElement('button');
+            del.className = 'key key-wide';
+            del.innerText = 'DEL';
+            del.onclick = () => { userInputA = userInputA.slice(0, -1); renderWordDisplay(); };
+            kb.appendChild(del);
+        }
+
+        function speakWord() {
+            const msg = new SpeechSynthesisUtterance(activeWord);
+            window.speechSynthesis.speak(msg);
+        }
+
+        function pickStudent() {
+            const total = document.getElementById('total-students').value;
+            const picked = Math.floor(Math.random() * total) + 1;
+            document.getElementById('picked-student').innerText = "Student #" + picked;
+        }
+
+        function updateScoreUI() {
+            document.getElementById('score-a').innerText = scoreA;
+            document.getElementById('score-b').innerText = scoreB;
+        }
+
+        function flashScreen(team, className) {
+            const el = document.getElementById(team === 'A' ? 'side-a' : 'side-b');
+            el.classList.add(className);
+            setTimeout(() => el.classList.remove(className), 500);
+        }
+
+        function playSound(type) {
+            const ctx = new (window.AudioContext || window.webkitAudioContext)();
+            const osc = ctx.createOscillator();
+            const gain = ctx.createGain();
+            osc.connect(gain);
+            gain.connect(ctx.destination);
+
+            if (type === 'correct') {
+                osc.frequency.setValueAtTime(523.25, ctx.currentTime); // C5
+                osc.frequency.exponentialRampToValueAtTime(880, ctx.currentTime + 0.1);
+            } else {
+                osc.frequency.setValueAtTime(200, ctx.currentTime);
+                osc.frequency.exponentialRampToValueAtTime(50, ctx.currentTime + 0.2);
+            }
+
+            osc.start();
+            gain.gain.fadeOut = ctx.currentTime + 0.2;
+            osc.stop(ctx.currentTime + 0.2);
+        }
+
+        // Keyboard physical listener
+        window.addEventListener('keydown', (e) => {
+            const char = e.key.toUpperCase();
+            if (/^[A-Z]$/.test(char)) handleInput(char);
+            if (e.key === "Backspace") { userInputA = userInputA.slice(0, -1); renderWordDisplay(); }
+        });
+    </script>
+</body>
+</html>
